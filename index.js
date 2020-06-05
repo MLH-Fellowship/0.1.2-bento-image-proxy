@@ -26,6 +26,7 @@ const server = http.createServer((req, res) => {
     const {pathname, query} = url.parse(req.url, true);
 
     if (pathname.startsWith("/img")) {
+        console.info("IMG response");
         const file = iMap[query.id];
         const type = mime[path.extname(file).slice(1)] || 'text/plain';
         const s = file.createReadStream(file);
@@ -38,9 +39,10 @@ const server = http.createServer((req, res) => {
             res.statusCode = 404;
             res.end('Not found');
         });
-        return;
+
     }
-    else if (req.method.toLowerCase() === "post") {
+    else if (pathname !== "/ws" && req.method.toLowerCase() === "post") {
+        console.info("POST");
         const form = formidable();
 
         form.parse(req, (err, fields, files) => {
@@ -73,16 +75,14 @@ const server = http.createServer((req, res) => {
                 res.end(body);
             });
         });
-        return;
     }
-    res.statusCode = 404;
-    res.end();
 });
 
 server.on('upgrade', function upgrade(request, socket, head) {
     const pathname = url.parse(request.url).pathname;
 
     if (pathname === '/ws') {
+        console.info("Upgrading dashboard");
         wss1.handleUpgrade(request, socket, head, function done(ws) {
             wss1.emit('connection', ws, request);
         });
