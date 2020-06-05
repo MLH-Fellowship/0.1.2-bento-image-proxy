@@ -24,12 +24,14 @@ const mime = {
 
 const server = http.createServer((req, res) => {
     const {pathname, query} = url.parse(req.url, true);
+    console.debug(query);
 
     if (pathname.startsWith("/img")) {
         console.info("IMG response");
         const file = iMap[query.id];
+        console.debug(file);
         const type = mime[path.extname(file).slice(1)] || 'text/plain';
-        const s = file.createReadStream(file);
+        const s = fs.createReadStream(file);
         s.on('open', function () {
             res.setHeader('Content-Type', type);
             s.pipe(res);
@@ -48,6 +50,7 @@ const server = http.createServer((req, res) => {
         form.parse(req, (err, fields, files) => {
             const imgId = uuid();
             dashboards.forEach(ws => {
+                iMap[imgId] = files.image.path;
                 ws.send(JSON.stringify({
                     image: `http://localhost:5012/img?id=${imgId}`,
                     type: "request"
